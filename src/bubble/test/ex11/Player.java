@@ -1,4 +1,4 @@
-package bubble.test.ex10;
+package bubble.test.ex11;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -14,6 +14,9 @@ public class Player extends JLabel implements Moveable {
 	// 위치 상태
 	private int x;
 	private int y;
+	
+	// 플레이어의 방향
+	private PlayerWay playerWay;
 
 	// 움직임 상태
 	private boolean left;
@@ -54,6 +57,8 @@ public class Player extends JLabel implements Moveable {
 		leftWallCrash = false;
 		rightWallCrash = false;
 
+		playerWay = PlayerWay.RIGHT;
+		
 		setIcon(playerR);
 		setSize(50, 50);
 		setLocation(x, y);
@@ -67,6 +72,7 @@ public class Player extends JLabel implements Moveable {
 	@Override
 	public void left() {
 		//System.out.println("left");
+		playerWay = PlayerWay.LEFT;
 		left = true;
 		new Thread(()-> {
 			while(left) {
@@ -86,6 +92,7 @@ public class Player extends JLabel implements Moveable {
 	@Override
 	public void right() {
 		//System.out.println("right");
+		playerWay = PlayerWay.RIGHT;
 		right = true;
 		new Thread(()-> {
 			while(right) {
