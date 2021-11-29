@@ -16,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BubbleFrame extends JFrame {
-
+ 
 	private BubbleFrame mContext = this;
 	private JLabel backgroundMap;
 	private Player player;
