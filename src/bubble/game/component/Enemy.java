@@ -67,13 +67,13 @@ public class Enemy extends JLabel implements Moveable {
 		setLocation(x, y);
 	}
 	
-	private void initEnemyDirection(EnemyWay enemyD) {
-		if(EnemyWay.RIGHT == enemyD) {
-			enemyD = EnemyWay.RIGHT;
+	private void initEnemyDirection(EnemyWay enemyWay) {
+		if(EnemyWay.RIGHT == enemyWay) {
+			enemyWay = EnemyWay.RIGHT;
 			setIcon(enemyR);
 			right();
 		}else {
-			enemyD = EnemyWay.LEFT;
+			enemyWay = EnemyWay.LEFT;
 			setIcon(enemyL);
 			left();
 		}
