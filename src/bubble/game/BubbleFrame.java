@@ -2,6 +2,8 @@ package bubble.game;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -10,6 +12,7 @@ import javax.swing.JLabel;
 import bubble.game.component.Enemy;
 import bubble.game.component.Player;
 import bubble.game.music.BGM;
+import bubble.game.state.EnemyWay;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,7 +23,7 @@ public class BubbleFrame extends JFrame {
 	private BubbleFrame mContext = this;
 	private JLabel backgroundMap;
 	private Player player;
-	private Enemy enemy; // 컬렉션으로 관리
+	private List<Enemy> enemys; // 컬렉션으로 관리
 
 	public BubbleFrame() {
 		initObject();
@@ -34,8 +37,10 @@ public class BubbleFrame extends JFrame {
 		setContentPane(backgroundMap);
 		player = new Player(mContext);
 		add(player);
-		enemy = new Enemy(mContext); // new를 두번
-		add(enemy);
+		enemys = new ArrayList<Enemy>();
+		enemys.add(new Enemy(mContext, EnemyWay.RIGHT));
+		enemys.add(new Enemy(mContext, EnemyWay.LEFT));
+		for(Enemy e : enemys) add(e);
 		new BGM();
 	}
 
@@ -52,27 +57,22 @@ public class BubbleFrame extends JFrame {
 			// 키보드 클릭 이벤트 핸들러
 			@Override
 			public void keyPressed(KeyEvent e) {
-				// System.out.println(e.getKeyCode());
-
 				switch (e.getKeyCode()) {
-				case KeyEvent.VK_LEFT:
-					if (!player.isLeft() && !player.isLeftWallCrash()) {
-						player.left(); // 5초
-					}
+				case KeyEvent.VK_LEFT: 
+					if (!player.isLeft() && !player.isLeftWallCrash() && player.getState() == 0)
+						player.left();
 					break;
 				case KeyEvent.VK_RIGHT:
-					if (!player.isRight() && !player.isRightWallCrash()) {
-						player.right(); // 3초
-					}
-
+					if (!player.isRight() && !player.isRightWallCrash() && player.getState() == 0)
+						player.right();
 					break;
 				case KeyEvent.VK_UP:
-					if(!player.isUp() && !player.isDown()) {
+					if(!player.isUp() && !player.isDown() && player.getState() == 0)
 						player.up();
-					}
 					break;
 				case KeyEvent.VK_SPACE:
-					player.attack();
+					if(player.getState() == 0)
+						player.attack();
 					break;
 				}
 			}

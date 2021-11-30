@@ -14,6 +14,8 @@ public class BackgroundEnemyService implements Runnable{
 
 	private BufferedImage image;
 	private Enemy enemy;
+	private int JUMPCOUNT = 0; // 점프 카운트
+	private int FIRST = 0;     // 바닥 도착 여부 0 바닥, 1 꼭대기
 	
 	// 플레이어, 버블
 	public BackgroundEnemyService(Enemy enemy) {
@@ -48,14 +50,50 @@ public class BackgroundEnemyService implements Runnable{
 				}
 			}
 			
-			// 외벽 충돌 확인
-			if(leftColor.getRed() == 255 && leftColor.getGreen() == 0 && leftColor.getBlue() == 0) {
+			// 바닥 도착
+			if (enemy.getY() > 530) {
+				FIRST = 1;
+			}
+			
+			// 꼭대기 도착.
+			if(enemy.getY() <= 180 && FIRST == 1) {
+				JUMPCOUNT = 0;
+				FIRST = 0;
+			}
+			
+			// 오른쪽 구석
+			if (JUMPCOUNT < 3 
+					&& FIRST == 1 
+					&& enemy.getX() > 850 
+					&& rightColor.getRed() == 255
+					&& rightColor.getGreen() == 0 
+					&& rightColor.getBlue() == 0) {
+				enemy.setRight(false);
+				enemy.setLeft(true);
+				if(!enemy.isUp() && !enemy.isDown()) {
+					JUMPCOUNT++;
+					if(JUMPCOUNT == 3) enemy.left();
+					enemy.up();
+				}
+			// 왼쪽 구석. 	
+			}else if(JUMPCOUNT < 3 
+					&& FIRST == 1 
+					&& enemy.getX() <= 80 
+					&& leftColor.getRed() == 255
+					&& leftColor.getGreen() == 0 
+					&& leftColor.getBlue() == 0) {
+				enemy.setLeft(false);
+				enemy.setRight(true);
+				if(!enemy.isUp() && !enemy.isDown()) {
+					JUMPCOUNT++;
+					if(JUMPCOUNT == 3) enemy.right();
+					enemy.up();
+				}
+			}else if(leftColor.getRed() == 255 && leftColor.getGreen() == 0 && leftColor.getBlue() == 0) {
 				enemy.setLeft(false);
 				if(!enemy.isRight()) {
 					enemy.right();	
 				}
-				
-				
 			}else if(rightColor.getRed() == 255 && rightColor.getGreen() == 0 && rightColor.getBlue() == 0) {
 				enemy.setRight(false);
 				if(!enemy.isLeft()) {

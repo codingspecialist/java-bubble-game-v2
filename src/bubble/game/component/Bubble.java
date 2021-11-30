@@ -1,5 +1,7 @@
 package bubble.game.component;
 
+import java.util.List;
+
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
@@ -16,7 +18,8 @@ public class Bubble extends JLabel implements Moveable{
 	// 의존성 콤포지션
 	private BubbleFrame mContext;
 	private Player player;
-	private Enemy enemy;
+	private List<Enemy> enemys;
+	private Enemy removeEnemy = null; // 적 제거 변수. 
 	private BackgroundBubbleService backgroundBubbleService;
 	
 	// 위치 상태
@@ -38,7 +41,7 @@ public class Bubble extends JLabel implements Moveable{
 	public Bubble(BubbleFrame mContext) {
 		this.mContext = mContext;
 		this.player = mContext.getPlayer();
-		this.enemy = mContext.getEnemy();
+		this.enemys = mContext.getEnemys();
 		initObject();
 		initSetting();
 	}
@@ -79,12 +82,12 @@ public class Bubble extends JLabel implements Moveable{
 			
 			
 			// 40과 60의 범위 절대값
-			if((Math.abs(x - enemy.getX()) < 10 ) && 
-					Math.abs(y - enemy.getY()) > 0 && Math.abs(y - enemy.getY()) < 50 ) {
-				System.out.println("물방울이 적군과 충돌하였습니다.");
-				if(enemy.getState() == 0) {
-					attack();
-					break;
+			for (Enemy e : enemys) {
+				if (Math.abs(x - e.getX()) < 10 && Math.abs(y - e.getY()) > 0 && Math.abs(y - e.getY()) < 50) {
+					if (e.getState() == 0) {
+						attack(e);
+						break;
+					}
 				}
 			}
 			
@@ -110,12 +113,12 @@ public class Bubble extends JLabel implements Moveable{
 			}
 			
 			// 아군과 적군의 거리가 10
-			if((Math.abs(x - enemy.getX()) < 10 ) && 
-					Math.abs(y - enemy.getY()) > 0 && Math.abs(y - enemy.getY()) < 50 ) {
-				System.out.println("물방울이 적군과 충돌하였습니다.");
-				if(enemy.getState() == 0) {
-					attack();
-					break;
+			for (Enemy e : enemys) {
+				if (Math.abs(x - e.getX()) < 10 && Math.abs(y - e.getY()) > 0 && Math.abs(y - e.getY()) < 50) {
+					if (e.getState() == 0) {
+						attack(e);
+						break;
+					}
 				}
 			}
 			
@@ -155,11 +158,12 @@ public class Bubble extends JLabel implements Moveable{
 	}
 	
 	@Override
-	public void attack() {
+	public void attack(Enemy e) {
 		state = 1;
-		enemy.setState(1);
+		e.setState(1);
 		setIcon(bubbled);
-		mContext.remove(enemy); // 메모리에서 사라지게 한다. (가비지 컬렉션->즉시 발동하지 않음)
+		removeEnemy = e;
+		mContext.remove(e); // 메모리에서 사라지게 한다. (가비지 컬렉션->즉시 발동하지 않음)
 		mContext.repaint(); // 화면 갱신
 	}
 	
@@ -171,9 +175,7 @@ public class Bubble extends JLabel implements Moveable{
 			setIcon(bomb);
 			Thread.sleep(500);
 			// 버블 객체 메모리에서 날리기
-			System.out.println(mContext.getPlayer().getBubbleList().size());
 			mContext.getPlayer().getBubbleList().remove(this);
-			System.out.println(mContext.getPlayer().getBubbleList().size());
 			mContext.remove(this); // BubbleFrame의 bubble이 메모리에서 소멸된다.
 			mContext.repaint(); // BubbleFrame의 전체를 다시 그린다. (메모리에서 없는 건 그리지 않음)
 		} catch (InterruptedException e) {
@@ -189,9 +191,8 @@ public class Bubble extends JLabel implements Moveable{
 				setIcon(bomb);
 				Thread.sleep(1000);
 				// 버블 객체 메모리에서 날리기
-				System.out.println(mContext.getPlayer().getBubbleList().size());
 				mContext.getPlayer().getBubbleList().remove(this);
-				System.out.println(mContext.getPlayer().getBubbleList().size());
+				mContext.getEnemys().remove(removeEnemy); // 컨텍스트에 enemy 삭제 
 				mContext.remove(this);
 				mContext.repaint();
 			} catch (Exception e) {
