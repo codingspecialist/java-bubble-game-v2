@@ -1,204 +1,247 @@
 package bubble.game.component;
 
-import java.util.List;
-
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-
-import bubble.game.BubbleFrame;
+import bubble.game.Main;
 import bubble.game.Moveable;
 import bubble.game.service.BackgroundBubbleService;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+
+import javax.swing.*;
+import java.util.List;
 
 @Getter
 @Setter
-public class Bubble extends JLabel implements Moveable{
-	
-	// 의존성 콤포지션
-	private BubbleFrame mContext;
-	private Player player;
-	private List<Enemy> enemys;
-	private Enemy removeEnemy = null; // 적 제거 변수. 
-	private BackgroundBubbleService backgroundBubbleService;
-	
-	// 위치 상태
-	private int x;
-	private int y;
+@ToString
+public class Bubble extends JLabel implements Moveable {
+    private Main main;
+    private Player player;
+    private List<Enemy> enemys;
 
-	// 움직임 상태
-	private boolean left;
-	private boolean right;
-	private boolean up;
-	
-	// 적군을 맞춘 상태
-	private int state; // 0(물방울), 1(적을 가둔 물방울)
-	
-	private ImageIcon bubble; // 물방울
-	private ImageIcon bubbled; // 적을 가둔 물방울
-	private ImageIcon bomb; // 물방울이 터진 상태
+    private final int SPPED = 3;
+    private final int JUMP = 2;
+    private int x;
+    private int y;
+    private ImageIcon bubble;
+    private ImageIcon bubbled;
+    private ImageIcon bomb;
 
-	public Bubble(BubbleFrame mContext) {
-		this.mContext = mContext;
-		this.player = mContext.getPlayer();
-		this.enemys = mContext.getEnemys();
-		initObject();
-		initSetting();
-	}
-	
-	private void initObject() {
-		bubble = new ImageIcon("image/bubble.png");
-		bubbled = new ImageIcon("image/bubbled.png");
-		bomb = new ImageIcon("image/bomb.png");
-		
-		backgroundBubbleService = new BackgroundBubbleService(this);
-	}
-	
-	private void initSetting() {
-		left = false;
-		right = false;
-		up = false;
-		
-		x = player.getX();
-		y = player.getY();
-		
-		setIcon(bubble);
-		setSize(50, 50);
-		
-		state = 0;
-	}
+    private boolean left;
+    private boolean right;
+    private boolean up;
 
-	@Override
-	public void left() {
-		left = true;
-		for(int i=0; i<400; i++) {
-			x--;
-			setLocation(x, y);
-			
-			if(backgroundBubbleService.leftWall()) {
-				left = false;
-				break;
-			}
-			
-			
-			// 40과 60의 범위 절대값
-			for (Enemy e : enemys) {
-				if (Math.abs(x - e.getX()) < 10 && Math.abs(y - e.getY()) > 0 && Math.abs(y - e.getY()) < 50) {
-					if (e.getState() == 0) {
-						attack(e);
-						break;
-					}
-				}
-			}
-			
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		up();
-	}
+    private int state; // 0, 기본물방울, 1 적을 가뒀을때, 2 터졌을때
+    private Enemy attackEnemyInfo; // 가둔 적의 정보
 
-	@Override
-	public void right() {
-		right = true;
-		for(int i=0; i<400; i++) {
-			x++;
-			setLocation(x, y);
-			
-			if(backgroundBubbleService.rightWall()) {
-				right = false;
-				break;
-			}
-			
-			// 아군과 적군의 거리가 10
-			for (Enemy e : enemys) {
-				if (Math.abs(x - e.getX()) < 10 && Math.abs(y - e.getY()) > 0 && Math.abs(y - e.getY()) < 50) {
-					if (e.getState() == 0) {
-						attack(e);
-						break;
-					}
-				}
-			}
-			
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		up();
-	}
+    private BackgroundBubbleService backgroundBubbleService;
 
-	@Override
-	public void up() {
-		up = true;
-		while(up) {
-			y--;
-			setLocation(x, y);
-			
-			if(backgroundBubbleService.topWall()) {
-				up = false;
-				break;
-			}
-			
-			try {
-				if(state==0) { // 기본 물방울
-					Thread.sleep(1);
-				}else { // 적을 가둔 물방울
-					Thread.sleep(10);
-				}
-				
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		if(state == 0) clearBubble(); // 천장에 버블이 도착하고 나서 3초 후에 메모리에서 소멸
-	}
-	
-	@Override
-	public void attack(Enemy e) {
-		state = 1;
-		e.setState(1);
-		setIcon(bubbled);
-		removeEnemy = e;
-		mContext.remove(e); // 메모리에서 사라지게 한다. (가비지 컬렉션->즉시 발동하지 않음)
-		mContext.repaint(); // 화면 갱신
-	}
-	
-	
-	// 행위 -> clear (동사) -> bubble (목적어)
-	private void clearBubble() {
-		try {
-			Thread.sleep(3000);
-			setIcon(bomb);
-			Thread.sleep(500);
-			// 버블 객체 메모리에서 날리기
-			mContext.getPlayer().getBubbleList().remove(this);
-			mContext.remove(this); // BubbleFrame의 bubble이 메모리에서 소멸된다.
-			mContext.repaint(); // BubbleFrame의 전체를 다시 그린다. (메모리에서 없는 건 그리지 않음)
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void clearBubbled() {
-		new Thread(()->{
-			System.out.println("clearBubbled");
-			try {
-				up = false;
-				setIcon(bomb);
-				Thread.sleep(1000);
-				// 버블 객체 메모리에서 날리기
-				mContext.getPlayer().getBubbleList().remove(this);
-				mContext.getEnemys().remove(removeEnemy); // 컨텍스트에 enemy 삭제 
-				mContext.remove(this);
-				mContext.repaint();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}).start();
+    public Bubble(Main main) {
+        this.main = main;
+        this.player = main.getPlayer();
+        this.enemys = main.getEnemys();
+        initObject();
+        initSetting();
+    }
 
-	}
+    private void initObject() {
+        bubble = new ImageIcon("image/bubble.png");
+        bubbled = new ImageIcon("image/bubbled.png");
+        bomb = new ImageIcon("image/bomb.png");
+
+        backgroundBubbleService = new BackgroundBubbleService(this);
+
+    }
+
+    private void initSetting() {
+        left = false;
+        right = false;
+        up = false;
+
+        x = player.getX();
+        y = player.getY();
+
+        setIcon(bubble);
+        setSize(50, 50);
+        setLocation(x, y);
+
+        state = 0;
+    }
+
+
+    // 물방울이 적에게 닿았을때
+    public void attack(Enemy enemy) {
+        System.out.println("적 맞춤");
+        state = 1;
+        enemy.setState(1);
+        setIcon(bubbled);
+        attackEnemyInfo= enemy;
+        main.remove(enemy);
+        main.repaint();
+    }
+
+    // 3초후 물방울이 사라지게
+    private void clearBubble(){
+        if(state == 0 ){
+
+        }
+
+    }
+
+    // 적을 가둔 물방울을 터트렸을때
+    public void clearBubbled (){
+        new Thread(()->{
+            try {
+                up = false;
+                setIcon(bomb);
+                Thread.sleep(1000);
+                main.remove(this);
+                main.repaint();
+
+                if(state == 1) {
+                    enemys.remove(attackEnemyInfo);
+                    System.out.println("남은 적 수  : " + enemys.size());
+
+                    if(enemys.size() == 0 ) {
+                        main.next(); // 다음스테이지로
+                    }
+                }
+                state = 2;
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }).start();
+
+    }
+
+
+    @Override
+    public void left() {
+        left = true;
+
+        EXIT :
+        for (int i = 0; i < 200; i++) {
+            x--;
+            setLocation(x, y);
+            if (backgroundBubbleService.leftWall()) {
+                left = false;
+                break;
+            }
+            for(int j=0;j<enemys.size();j++) {
+                if(Math.abs(x - enemys.get(j).getX()) < 20 && Math.abs(y - enemys.get(j).getY()) < 30) {
+                    if(enemys.get(j).getState() == 0) {
+                        attack(enemys.get(j));
+                        break EXIT;
+                    }
+                }
+
+            }
+
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        up();
+    }
+
+    @Override
+    public void right() {
+        right = true;
+
+        EXIT :
+        for (int i = 0; i < 200; i++) {
+            x++;
+            setLocation(x, y);
+            if (backgroundBubbleService.rightWall()) {
+                right = false;
+                break;
+            }
+
+            for(int j=0;j<enemys.size();j++) {
+                if(Math.abs(x - enemys.get(j).getX()) < 20 && Math.abs(y - enemys.get(j).getY()) < 30) {
+                    if(enemys.get(j).getState() == 0) {
+                        attack(enemys.get(j));
+                        break EXIT;
+                    }
+                }
+            }
+
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        up();
+    }
+
+    @Override
+    public void up() {
+        up = true;
+
+        while (up) {
+            y--;
+            setLocation(x, y);
+            if(Math.abs(player.getX() - x) < 20 &&
+                    Math.abs(player.getY() - y) > 0 && Math.abs(player.getY() - y) < 50) {
+                clearBubbled();
+                break;
+            }
+
+            if (backgroundBubbleService.topWall()) {
+                up = false;
+                top();
+                break;
+            }
+
+            try {
+                if(state == 0) {
+                    Thread.sleep(1);
+                } else {
+                    Thread.sleep(10);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public void top(){
+        while(true){
+            // 적을 가둔 물방울은 3초 지나도 안터짐
+            if(Math.abs(player.getX() - x) < 30 && Math.abs(player.getY() - y) < 50) {
+                System.out.println("터짐");
+                clearBubbled();
+                break;
+            }
+
+            // 기본 물방울 3초후 터짐
+            if(state == 0) {
+                new Thread(()->{
+                    try {
+                        Thread.sleep(3000);
+                        setIcon(bomb);
+                        Thread.sleep(500);
+                        main.remove(this);
+                        main.repaint();
+                        player.getBubbleList().remove(this);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            }
+
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 }

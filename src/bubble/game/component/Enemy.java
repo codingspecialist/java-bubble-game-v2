@@ -1,181 +1,210 @@
 package bubble.game.component;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-
-import bubble.game.BubbleFrame;
+import bubble.game.Main;
 import bubble.game.Moveable;
 import bubble.game.service.BackgroundEnemyService;
 import bubble.game.state.EnemyWay;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+
+import javax.swing.*;
 
 @Getter
 @Setter
+@ToString
 public class Enemy extends JLabel implements Moveable {
+    private Main main;
+    private final int SPPED = 2;
+    private final int JUMP = 1;
+    private int x;
+    private int y;
+    private ImageIcon enemyR, enemyL;
 
-	private BubbleFrame mContext;
-	private Player player; // 플레이어 추가. 
-	
-	// 위치 상태
-	private int x;
-	private int y;
-	
-	// 적군의 방향
-	private EnemyWay enemyWay;
+    private boolean left;
+    private boolean right;
+    private boolean up;
+    private boolean down;
 
-	// 움직임 상태
-	private boolean left;
-	private boolean right;
-	private boolean up;
-	private boolean down;
-	
-	private int state; // 0(살아있는 상태), 1(물방울에 갇힌 상태)
-	
-	// 적군 속도 상태
-	private final int SPEED = 3;
-	private final int JUMPSPEED = 1;
+    private boolean leftWall;
+    private boolean rightWall;
+    private int crashCount;
 
-	private ImageIcon enemyR, enemyL;
+    private EnemyWay enemyWay;
+    private int state; // 0 살아있을때, 1 물방울에 갇혔을때
 
-	public Enemy(BubbleFrame mContext, EnemyWay enemyWay) {
-		this.mContext = mContext;
-		this.player = mContext.getPlayer();
-		initObject();
-		initSetting();
-		initBackgroundEnemyService();
-		initEnemyDirection(enemyWay);
-	}
+    public Enemy(Main main, int x, int y) {
+        this.main = main;
+        this.x= x;
+        this.y = y;
 
-	private void initObject() {
-		enemyR = new ImageIcon("image/enemyR.png");
-		enemyL = new ImageIcon("image/enemyL.png");
-	}
+        initObject();
+        initSetting();
 
-	private void initSetting() {
-		x = 480;
-		y = 178;
+        int n = (int)(Math.random()*2);
+        if(n ==0) {
+            left();
+        } else {
+            right();
+        }
+    }
 
-		left = false;
-		right = false;
-		up = false;
-		down = false;
-		
-		state = 0;
+    private void initObject() {
+        enemyL = new ImageIcon("image/enemyL.png");
+        enemyR = new ImageIcon("image/enemyR.png");
+        initBackgroundService();
 
-		setSize(50, 50);
-		setLocation(x, y);
-	}
-	
-	private void initEnemyDirection(EnemyWay enemyD) {
-		if(EnemyWay.RIGHT == enemyD) {
-			enemyD = EnemyWay.RIGHT;
-			setIcon(enemyR);
-			right();
-		}else {
-			enemyD = EnemyWay.LEFT;
-			setIcon(enemyL);
-			left();
-		}
-	}
-	
-	private void initBackgroundEnemyService() {
-		new Thread(new BackgroundEnemyService(this)).start();
-	}
+    }
 
-	@Override
-	public void left() {
-		//System.out.println("left");
-		enemyWay = EnemyWay.LEFT;
-		left = true;
-		new Thread(()-> {
-			while(left) {
-				setIcon(enemyL);
-				x = x - SPEED;
-				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
-				try {
-					Thread.sleep(10); // 0.01초
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} 
-			}
-		}).start();
+    private void initBackgroundService() {
+        new Thread(new BackgroundEnemyService(this)).start();
+    }
 
-	}
+    private void initSetting() {
+//        x = 480;
+//        y = 178;
+        setIcon(enemyR);
+        setSize(50, 50);
+        setLocation(x, y);
 
-	@Override
-	public void right() {
-		//System.out.println("right");
-		enemyWay = EnemyWay.RIGHT;
-		right = true;
-		new Thread(()-> {
-			while(right) {
-				setIcon(enemyR);
-				x = x + SPEED;
-				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
-				try {
-					Thread.sleep(10); // 0.01초
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} 
-			}
-		}).start();
-		
+        left = false;
+        right = false;
+        up = false;
+        down = false;
+        leftWall = false;
+        rightWall = false;
 
-	}
+        enemyWay = EnemyWay.RIGHT;
+        state = 0;
+        crashCount = 0;
+        attack();
+    }
 
-	@Override
-	public void up() {
-		//System.out.println("up");
-		up = true;
-		new Thread(()->{
-			for(int i=0; i<130/JUMPSPEED; i++) {
-				y = y - JUMPSPEED;
-				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
-				try {
-					Thread.sleep(5);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			up = false;
-			down();
-			
-		}).start();
-	}
 
-	@Override
-	public void down() {
-		//System.out.println("down");
-		down = true;
-		new Thread(()->{
-			while(down) {
-				y = y + JUMPSPEED;
-				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
-				try {
-					Thread.sleep(3);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			down = false;
-		}).start();
-	}
+    public void attack(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(main.getPlayer().getState() == 0){
+                    int attackX = Math.abs(x - main.getPlayer().getX());
+                    int attackY = Math.abs(y - main.getPlayer().getY());
+                    if(state== 0 &&  5 <= attackX && attackX <= 45 && 5 <= attackY && attackY <= 45) {
+                        main.gameover();
+                    }
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
+
+
+    @Override
+    public void left() {
+        setIcon(enemyL);
+        left = true;
+        enemyWay = EnemyWay.LEFT;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (left) {
+                    x = x - SPPED;
+                    setLocation(x, y);
+
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
+
+    @Override
+    public void right() {
+        setIcon(enemyR);
+        right = true;
+        enemyWay = EnemyWay.RIGHT;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (right) {
+                    x = x + SPPED;
+                    setLocation(x, y);
+
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
+
+    @Override
+    public void up() {
+        up = true;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                    for (int i = 0; i < 130 / JUMP; i++) {
+                        y = y - JUMP;
+                        setLocation(x, y);
+                        Thread.sleep(5);
+                    }
+                    up = false;
+                    down();
+                    leftWall = false;
+                    rightWall = false;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+    }
+
+    @Override
+    public void down() {
+        down = true;
+
+        left = false;
+        right = false;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(down) {
+                    y = y + JUMP;
+                    setLocation(x, y);
+
+                    try {
+                        Thread.sleep(3);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                down = false;
+                if(enemyWay == EnemyWay.RIGHT) {
+                    right();
+                } else {
+                    left();
+                }
+            }
+        }).start();
+
+
+
+    }
 }

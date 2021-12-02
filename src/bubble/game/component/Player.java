@@ -1,198 +1,196 @@
 package bubble.game.component;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-
-import bubble.game.BubbleFrame;
+import bubble.game.Main;
 import bubble.game.Moveable;
 import bubble.game.service.BackgroundPlayerService;
 import bubble.game.state.PlayerWay;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
-// class Player -> new 가능한 애들!! 게임에 존재할 수 있음. (추상메서드를 가질 수 없다.)
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
+@ToString
 public class Player extends JLabel implements Moveable {
+    private Main main;
+    private List<Bubble> bubbleList;
+    private final int SPPED = 3;
+    private final int JUMP = 2;
+    private int x;
+    private int y;
+    private ImageIcon playerR, playerL;
 
-	private BubbleFrame mContext;
-	private List<Bubble> bubbleList;
-	
-	// 위치 상태
-	private int x;
-	private int y;
-	
-	// 플레이어의 방향
-	private PlayerWay playerWay;
+    private boolean left;
+    private boolean right;
+    private boolean up;
+    private boolean down;
 
-	// 움직임 상태
-	private boolean left;
-	private boolean right;
-	private boolean up;
-	private boolean down;
-	
-	// 벽에 충돌한 상태
-	private boolean leftWallCrash;
-	private boolean rightWallCrash;
-	
-	// 플레이어 속도 상태
-	private final int SPEED = 4;
-	private final int JUMPSPEED = 2; // up, down
-	
-	private int state = 0; // 0 : live , 1 : die
+    private boolean leftWall;
+    private boolean rightWall;
 
-	private ImageIcon playerR, playerL, playerRdie, playerLdie;
+    private PlayerWay playerWay;
 
-	public Player(BubbleFrame mContext) {
-		this.mContext = mContext;
-		initObject();
-		initSetting();
-		initBackgroundPlayerService();
-	}
+    private int state; // 0 살아있을때, 1 죽었을때
 
-	private void initObject() {
-		playerR = new ImageIcon("image/playerR.png");
-		playerL = new ImageIcon("image/playerL.png");
-		playerRdie = new ImageIcon("image/playerRdie.png");
-		playerLdie = new ImageIcon("image/playerLdie.png");
-		bubbleList = new ArrayList<>();
-	}
 
-	private void initSetting() {
-		x = 80;
-		y = 535;
+    public Player(Main main) {
+        this.main = main;
+        initObject();
+        initSetting();
+        initBackgroundService();
+    }
 
-		left = false;
-		right = false;
-		up = false;
-		down = false;
-		
-		leftWallCrash = false;
-		rightWallCrash = false;
+    private void initObject() {
+        playerL = new ImageIcon("image/playerL.png");
+        playerR = new ImageIcon("image/playerR.png");
+        bubbleList = new ArrayList<>();
+    }
 
-		playerWay = PlayerWay.RIGHT;
-		
-		setIcon(playerR);
-		setSize(50, 50);
-		setLocation(x, y);
-	}
-	
-	private void initBackgroundPlayerService() {
-		new Thread(new BackgroundPlayerService(this)).start();
-	}
-	
-	@Override
-	public void attack() {
-		new Thread(()->{
-			Bubble bubble = new Bubble(mContext);
-			mContext.add(bubble);
-			bubbleList.add(bubble);
-			if(playerWay == PlayerWay.LEFT) {
-				bubble.left();
-			}else {
-				bubble.right();
-			}
-		}).start();
-	}
+    private void initBackgroundService() {
+        new Thread(new BackgroundPlayerService(this)).start();
+    }
 
-	// 이벤트 핸들러
-	@Override
-	public void left() {
-		//System.out.println("left");
-		playerWay = PlayerWay.LEFT;
-		left = true;
-		new Thread(()-> {
-			while(left && getState() == 0) {
-				setIcon(playerL);
-				x = x - SPEED;
-				setLocation(x, y);
-				try {
-					Thread.sleep(10); // 0.01초
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} 
-			}
-		}).start();
+    public void initSetting() {
+        x = 80;
+        y = 535;
 
-	}
+        setIcon(playerR);
+        setSize(50, 50);
+        setLocation(x, y);
 
-	@Override
-	public void right() {
-		//System.out.println("right");
-		playerWay = PlayerWay.RIGHT;
-		right = true;
-		new Thread(()-> {
-			while(right && getState() == 0) {
-				setIcon(playerR);
-				x = x + SPEED;
-				setLocation(x, y);
-				try {
-					Thread.sleep(10); // 0.01초
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} 
-			}
-		}).start();
-		
+        left = false;
+        right = false;
+        up = false;
+        down = false;
+        leftWall = false;
+        rightWall = false;
 
-	}
+        playerWay = PlayerWay.RIGHT;
+        state = 0;
+    }
 
-	// left + up, right + up
-	@Override
-	public void up() {
-		//System.out.println("up");
-		up = true;
-		new Thread(()->{
-			for(int i=0; i<130/JUMPSPEED; i++) {
-				y = y - JUMPSPEED;
-				setLocation(x, y);
-				try {
-					Thread.sleep(5);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			up = false;
-			down();
-			
-		}).start();
-	}
+    public void attack(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Bubble bubble = new Bubble(main);
+                main.add(bubble);
+                bubbleList.add(bubble);
+                if (playerWay == PlayerWay.LEFT) {
+                    bubble.left();
+                } else {
+                    bubble.right();
+                }
+            }
+        }).start();
 
-	@Override
-	public void down() {
-		//System.out.println("down");
-		down = true;
-		new Thread(()->{
-			while(down) {
-				y = y + JUMPSPEED;
-				setLocation(x, y);
-				try {
-					Thread.sleep(3);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			down = false;
-		}).start();
-	}
-	
-	public void die() {
-		new Thread(() -> {
-			setState(1);
-			setIcon(PlayerWay.RIGHT == playerWay ? playerRdie : playerLdie);
-			try {				
-				if(!isUp() && !isDown()) up();
-				Thread.sleep(2000);
-				mContext.remove(this);
-				mContext.repaint();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			System.out.println("플레이어 사망.");
-		}).start();
-	}
+    }
+
+
+
+    @Override
+    public void left() {
+        setIcon(playerL);
+        left = true;
+        playerWay = PlayerWay.LEFT;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (left) {
+                    x = x - SPPED;
+                    setLocation(x, y);
+
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
+
+    @Override
+    public void right() {
+        setIcon(playerR);
+        right = true;
+        playerWay = PlayerWay.RIGHT;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (right) {
+                    x = x + SPPED;
+                    setLocation(x, y);
+
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
+
+    @Override
+    public void up() {
+        up = true;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                    try {
+                        for (int i = 0; i < 130 / JUMP; i++) {
+                            y = y - JUMP;
+                            setLocation(x, y);
+                            Thread.sleep(5);
+                        }
+
+
+                        up = false;
+                        down();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
+            }
+        }).start();
+
+    }
+
+    @Override
+    public void down() {
+        down = true;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(down) {
+                    y = y + JUMP;
+                    setLocation(x, y);
+
+                    try {
+                        Thread.sleep(3);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                down = false;
+            }
+        }).start();
+    }
+
+
+
+
 }
