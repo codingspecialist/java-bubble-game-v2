@@ -71,7 +71,7 @@ public class Bubble extends JLabel implements Moveable{
 	@Override
 	public void left() {
 		left = true;
-		for(int i=0; i<400; i++) {
+		Stop:for(int i=0; i<400; i++) {
 			x--;
 			setLocation(x, y);
 			
@@ -86,7 +86,7 @@ public class Bubble extends JLabel implements Moveable{
 				if (Math.abs(x - e.getX()) < 10 && Math.abs(y - e.getY()) > 0 && Math.abs(y - e.getY()) < 50) {
 					if (e.getState() == 0) {
 						attack(e);
-						break;
+						break Stop;
 					}
 				}
 			}
@@ -103,7 +103,7 @@ public class Bubble extends JLabel implements Moveable{
 	@Override
 	public void right() {
 		right = true;
-		for(int i=0; i<400; i++) {
+		Stop:for(int i=0; i<400; i++) {
 			x++;
 			setLocation(x, y);
 			
@@ -117,7 +117,7 @@ public class Bubble extends JLabel implements Moveable{
 				if (Math.abs(x - e.getX()) < 10 && Math.abs(y - e.getY()) > 0 && Math.abs(y - e.getY()) < 50) {
 					if (e.getState() == 0) {
 						attack(e);
-						break;
+						break Stop;
 					}
 				}
 			}
