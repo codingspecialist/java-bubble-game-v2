@@ -8,6 +8,7 @@ import javax.swing.JLabel;
 
 import bubble.game.BubbleFrame;
 import bubble.game.Moveable;
+import bubble.game.music.GameOverBGM;
 import bubble.game.service.BackgroundPlayerService;
 import bubble.game.state.PlayerWay;
 import lombok.Getter;
@@ -20,6 +21,7 @@ public class Player extends JLabel implements Moveable {
 
 	private BubbleFrame mContext;
 	private List<Bubble> bubbleList;
+	private GameOver gameOver;
 	
 	// 위치 상태
 	private int x;
@@ -184,8 +186,13 @@ public class Player extends JLabel implements Moveable {
 		new Thread(() -> {
 			setState(1);
 			setIcon(PlayerWay.RIGHT == playerWay ? playerRdie : playerLdie);
+			new GameOverBGM();
+			mContext.getBgm().stopBGM(); //음악이 멈춤
+
 			try {				
 				if(!isUp() && !isDown()) up();
+				gameOver = new GameOver(mContext);
+				mContext.add(gameOver);
 				Thread.sleep(2000);
 				mContext.remove(this);
 				mContext.repaint();

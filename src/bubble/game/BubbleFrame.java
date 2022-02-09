@@ -10,6 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import bubble.game.component.Enemy;
+import bubble.game.component.GameOver;
 import bubble.game.component.Player;
 import bubble.game.music.BGM;
 import bubble.game.state.EnemyWay;
@@ -24,6 +25,8 @@ public class BubbleFrame extends JFrame {
 	private JLabel backgroundMap;
 	private Player player;
 	private List<Enemy> enemys; // 컬렉션으로 관리
+	private BGM bgm;
+	private GameOver gameOver;
 
 	public BubbleFrame() {
 		initObject();
@@ -41,7 +44,8 @@ public class BubbleFrame extends JFrame {
 		enemys.add(new Enemy(mContext, EnemyWay.RIGHT));
 		enemys.add(new Enemy(mContext, EnemyWay.LEFT));
 		for(Enemy e : enemys) add(e);
-		new BGM();
+		bgm = new BGM();
+		bgm.playBGM("bgm.wav");
 	}
 
 	private void initSetting() {
