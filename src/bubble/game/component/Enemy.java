@@ -1,50 +1,62 @@
 package bubble.game.component;
 
+import java.util.List;
+
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
 import bubble.game.BubbleFrame;
 import bubble.game.Moveable;
 import bubble.game.service.BackgroundEnemyService;
-import bubble.game.state.EnemyWay;
+import bubble.game.state.EnemyDirection;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class Enemy extends JLabel implements Moveable {
-
-	private BubbleFrame mContext;
-	private Player player; // 플레이어 추가. 
 	
-	// 위치 상태
+	private BubbleFrame mContext;
+	
+	//위치상태
 	private int x;
 	private int y;
 	
-	// 적군의 방향
-	private EnemyWay enemyWay;
-
-	// 움직임 상태
+	// 작군의 방향
+	private EnemyDirection ed;
+	
+	//움직임 상태
 	private boolean left;
 	private boolean right;
 	private boolean up;
 	private boolean down;
 	
-	private int state; // 0(살아있는 상태), 1(물방울에 갇힌 상태)
-	
-	// 적군 속도 상태
+	//플레이어 속도 상태
 	private final int SPEED = 3;
 	private final int JUMPSPEED = 1;
-
+	
+	private int state; //0(살아있는 상태), 1(갇힌 상태)
+	
+	private boolean bottom;
+	
+	
 	private ImageIcon enemyR, enemyL;
 
-	public Enemy(BubbleFrame mContext, EnemyWay enemyWay) {
+	public Enemy(BubbleFrame mContext) {
 		this.mContext = mContext;
-		this.player = mContext.getPlayer();
 		initObject();
 		initSetting();
 		initBackgroundEnemyService();
-		initEnemyDirection(enemyWay);
+		
+		if(mContext.getDirection() == "left") {
+			left();
+		}else {
+			right();			
+		}
+	}
+
+	private void initBackgroundEnemyService() {
+		new Thread(new BackgroundEnemyService(this)).start();
 	}
 
 	private void initObject() {
@@ -60,48 +72,38 @@ public class Enemy extends JLabel implements Moveable {
 		right = false;
 		up = false;
 		down = false;
-		
+	
 		state = 0;
-
+		
+		bottom = false;
+		
+		if(mContext.getDirection() == "left") {
+			ed = EnemyDirection.LEFT;
+		}else {
+			ed = EnemyDirection.RIGHT;			
+		}
+		setIcon(enemyR);
 		setSize(50, 50);
 		setLocation(x, y);
-	}
-	
-	private void initEnemyDirection(EnemyWay enemyWay) {
-		if(EnemyWay.RIGHT == enemyWay) {
-			enemyWay = EnemyWay.RIGHT;
-			setIcon(enemyR);
-			right();
-		}else {
-			enemyWay = EnemyWay.LEFT;
-			setIcon(enemyL);
-			left();
-		}
-	}
-	
-	private void initBackgroundEnemyService() {
-		new Thread(new BackgroundEnemyService(this)).start();
+		
 	}
 
 	@Override
 	public void left() {
-		//System.out.println("left");
-		enemyWay = EnemyWay.LEFT;
+		// TODO Auto-generated method stub
+		ed = EnemyDirection.LEFT;
 		left = true;
 		new Thread(()-> {
 			while(left) {
 				setIcon(enemyL);
-				x = x - SPEED;
-				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
+				x = x-SPEED;
+				setLocation(x, y);		
 				try {
-					Thread.sleep(10); // 0.01초
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
-				} 
+				}
 			}
 		}).start();
 
@@ -109,73 +111,62 @@ public class Enemy extends JLabel implements Moveable {
 
 	@Override
 	public void right() {
-		//System.out.println("right");
-		enemyWay = EnemyWay.RIGHT;
-		right = true;
+		// TODO Auto-generated method stub
+		ed = EnemyDirection.RIGHT;
+		right=true;
 		new Thread(()-> {
 			while(right) {
 				setIcon(enemyR);
-				x = x + SPEED;
+				x = x+SPEED;
 				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
 				try {
-					Thread.sleep(10); // 0.01초
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
-				} 
+				}				
 			}
 		}).start();
-		
-
 	}
 
+	//left+up, right+up
 	@Override
 	public void up() {
-		//System.out.println("up");
+		// TODO Auto-generated method stub
 		up = true;
 		new Thread(()->{
 			for(int i=0; i<130/JUMPSPEED; i++) {
-				y = y - JUMPSPEED;
+				y = y-JUMPSPEED;
 				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
 				try {
 					Thread.sleep(5);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
-			
-			up = false;
+			up=false;
 			down();
 			
 		}).start();
+		
 	}
 
 	@Override
 	public void down() {
-		//System.out.println("down");
-		down = true;
+		// TODO Auto-generated method stub
+		down=true;
 		new Thread(()->{
 			while(down) {
-				y = y + JUMPSPEED;
+				y = y+JUMPSPEED;
 				setLocation(x, y);
-				if (Math.abs(x - player.getX()) < 50 && Math.abs(y - player.getY()) < 50) {
-					if (player.getState() == 0 && getState() == 0) 
-						player.die();
-				}
 				try {
 					Thread.sleep(3);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
-			down = false;
+			down=false;
 		}).start();
+
 	}
 }
