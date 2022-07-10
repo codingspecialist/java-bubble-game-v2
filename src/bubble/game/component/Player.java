@@ -8,59 +8,59 @@ import javax.swing.JLabel;
 
 import bubble.game.BubbleFrame;
 import bubble.game.Moveable;
-import bubble.game.music.GameOverBGM;
 import bubble.game.service.BackgroundPlayerService;
-import bubble.game.state.PlayerWay;
+import bubble.game.state.PlayerDirection;
 import lombok.Getter;
 import lombok.Setter;
 
-// class Player -> new 가능한 애들!! 게임에 존재할 수 있음. (추상메서드를 가질 수 없다.)
 @Getter
 @Setter
 public class Player extends JLabel implements Moveable {
-
+	
 	private BubbleFrame mContext;
 	private List<Bubble> bubbleList;
-	private GameOver gameOver;
+	private List<Enemy> enemyList;
 	
-	// 위치 상태
+	//위치상태
 	private int x;
 	private int y;
 	
-	// 플레이어의 방향
-	private PlayerWay playerWay;
-
-	// 움직임 상태
+	//플레이어의 방향
+	private PlayerDirection pd;
+	
+	//움직임 상태
 	private boolean left;
 	private boolean right;
 	private boolean up;
 	private boolean down;
 	
-	// 벽에 충돌한 상태
+	//벽에 충돌한 상태
 	private boolean leftWallCrash;
 	private boolean rightWallCrash;
 	
-	// 플레이어 속도 상태
+	//플레이어 속도 상태
 	private final int SPEED = 4;
-	private final int JUMPSPEED = 2; // up, down
+	private final int JUMPSPEED = 2;
 	
-	private int state = 0; // 0 : live , 1 : die
-
-	private ImageIcon playerR, playerL, playerRdie, playerLdie;
+	
+	private ImageIcon playerR, playerL;
 
 	public Player(BubbleFrame mContext) {
 		this.mContext = mContext;
+		this.enemyList = mContext.getEnemyList();
 		initObject();
 		initSetting();
 		initBackgroundPlayerService();
 	}
 
+	private void initBackgroundPlayerService() {
+		new Thread(new BackgroundPlayerService(this, mContext)).start();
+	}
+
 	private void initObject() {
 		playerR = new ImageIcon("image/playerR.png");
 		playerL = new ImageIcon("image/playerL.png");
-		playerRdie = new ImageIcon("image/playerRdie.png");
-		playerLdie = new ImageIcon("image/playerLdie.png");
-		bubbleList = new ArrayList<>();
+		bubbleList = new ArrayList<Bubble>();
 	}
 
 	private void initSetting() {
@@ -74,48 +74,31 @@ public class Player extends JLabel implements Moveable {
 		
 		leftWallCrash = false;
 		rightWallCrash = false;
-
-		playerWay = PlayerWay.RIGHT;
 		
+		pd = PlayerDirection.RIGHT;
 		setIcon(playerR);
 		setSize(50, 50);
 		setLocation(x, y);
-	}
-	
-	private void initBackgroundPlayerService() {
-		new Thread(new BackgroundPlayerService(this)).start();
-	}
-	
-	@Override
-	public void attack() {
-		new Thread(()->{
-			Bubble bubble = new Bubble(mContext);
-			mContext.add(bubble);
-			bubbleList.add(bubble);
-			if(playerWay == PlayerWay.LEFT) {
-				bubble.left();
-			}else {
-				bubble.right();
-			}
-		}).start();
+		
 	}
 
-	// 이벤트 핸들러
 	@Override
 	public void left() {
+		// TODO Auto-generated method stub
 		//System.out.println("left");
-		playerWay = PlayerWay.LEFT;
+		pd = PlayerDirection.LEFT;
 		left = true;
 		new Thread(()-> {
-			while(left && getState() == 0) {
+			while(left) {
 				setIcon(playerL);
-				x = x - SPEED;
-				setLocation(x, y);
+				x = x-SPEED;
+				setLocation(x, y);		
 				try {
-					Thread.sleep(10); // 0.01초
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
-				} 
+				}
 			}
 		}).start();
 
@@ -123,33 +106,34 @@ public class Player extends JLabel implements Moveable {
 
 	@Override
 	public void right() {
+		// TODO Auto-generated method stub
 		//System.out.println("right");
-		playerWay = PlayerWay.RIGHT;
-		right = true;
+		pd = PlayerDirection.RIGHT;
+		right=true;
 		new Thread(()-> {
-			while(right && getState() == 0) {
+			while(right) {
 				setIcon(playerR);
-				x = x + SPEED;
+				x = x+SPEED;
 				setLocation(x, y);
 				try {
-					Thread.sleep(10); // 0.01초
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
-				} 
+				}				
 			}
 		}).start();
-		
-
 	}
 
-	// left + up, right + up
+	//left+up, right+up
 	@Override
 	public void up() {
+		// TODO Auto-generated method stub
 		//System.out.println("up");
 		up = true;
 		new Thread(()->{
 			for(int i=0; i<130/JUMPSPEED; i++) {
-				y = y - JUMPSPEED;
+				y = y-JUMPSPEED;
 				setLocation(x, y);
 				try {
 					Thread.sleep(5);
@@ -157,20 +141,21 @@ public class Player extends JLabel implements Moveable {
 					e.printStackTrace();
 				}
 			}
-			
-			up = false;
+			up=false;
 			down();
 			
 		}).start();
+		
 	}
 
 	@Override
 	public void down() {
+		// TODO Auto-generated method stub
 		//System.out.println("down");
-		down = true;
+		down=true;
 		new Thread(()->{
 			while(down) {
-				y = y + JUMPSPEED;
+				y = y+JUMPSPEED;
 				setLocation(x, y);
 				try {
 					Thread.sleep(3);
@@ -178,28 +163,22 @@ public class Player extends JLabel implements Moveable {
 					e.printStackTrace();
 				}
 			}
-			down = false;
+			down=false;
 		}).start();
+
 	}
 	
-	public void die() {
-		new Thread(() -> {
-			setState(1);
-			setIcon(PlayerWay.RIGHT == playerWay ? playerRdie : playerLdie);
-			new GameOverBGM();
-			mContext.getBgm().stopBGM(); //음악이 멈춤
-
-			try {				
-				if(!isUp() && !isDown()) up();
-				gameOver = new GameOver(mContext);
-				mContext.add(gameOver);
-				Thread.sleep(2000);
-				mContext.remove(this);
-				mContext.repaint();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			System.out.println("플레이어 사망.");
-		}).start();
+	@Override
+	public void attack() {
+		new Thread(()-> {
+			Bubble bubble = new Bubble(mContext);
+			mContext.add(bubble);
+			bubbleList.add(bubble);
+			if(pd == PlayerDirection.LEFT) {
+				bubble.left();
+			}else {
+				bubble.right();
+			}			
+		}).start();		
 	}
 }
