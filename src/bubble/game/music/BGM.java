@@ -32,6 +32,7 @@ public class BGM {
 		}
 	}
 	
+	//게임오버 bgm
 	public void gameOverBGM() {
 		clip.close();
 		try {

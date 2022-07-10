@@ -91,7 +91,6 @@ public class Enemy extends JLabel implements Moveable {
 	@Override
 	public void left() {
 		// TODO Auto-generated method stub
-		//System.out.println("left");
 		ed = EnemyDirection.LEFT;
 		left = true;
 		new Thread(()-> {
@@ -113,7 +112,6 @@ public class Enemy extends JLabel implements Moveable {
 	@Override
 	public void right() {
 		// TODO Auto-generated method stub
-		//System.out.println("right");
 		ed = EnemyDirection.RIGHT;
 		right=true;
 		new Thread(()-> {
@@ -135,7 +133,6 @@ public class Enemy extends JLabel implements Moveable {
 	@Override
 	public void up() {
 		// TODO Auto-generated method stub
-		//System.out.println("up");
 		up = true;
 		new Thread(()->{
 			for(int i=0; i<130/JUMPSPEED; i++) {
@@ -157,7 +154,6 @@ public class Enemy extends JLabel implements Moveable {
 	@Override
 	public void down() {
 		// TODO Auto-generated method stub
-		//System.out.println("down");
 		down=true;
 		new Thread(()->{
 			while(down) {

@@ -37,7 +37,6 @@ public class BackgroundEnemyService implements Runnable {
 		
 			//바닥 충돌 확인
 			if(bottomColor != -2) {
-				//System.out.println("바닥에 충동함");
 				enemy.setDown(false);
 			} else {
 				if(!enemy.isUp() && !enemy.isDown()) {
@@ -47,29 +46,32 @@ public class BackgroundEnemyService implements Runnable {
 			
 			//외벽충돌 확인
 			if(leftColor.getRed() == 255 && leftColor.getGreen()==0 && leftColor.getBlue() == 0) {
-				//System.out.println("왼쪽 충돌");
 				enemy.setLeft(false);
 				if(!enemy.isRight()) {
 					enemy.right();
 				}
+				
+				//외벽 충돌시 바닥이면 점프
 				if(enemy.isBottom() && !enemy.isUp()) {
 					enemy.up();
 				}
+				
 			} else if(rightColor.getRed() == 255 && rightColor.getGreen()==0 && rightColor.getBlue() == 0) {
 				enemy.setRight(false);
-				//System.out.println("오른쪽 충돌");
 				if(!enemy.isLeft()) {
 					enemy.left();
 				}
+				
+				//오른쪽 아래 모서리 -> 점프
 				if(bottomColor == -131072 && !enemy.isUp()) {
 					enemy.setBottom(true);
-					
 					enemy.up();
 				} else {
 					enemy.setBottom(false);
 				}
 			}
 			
+			//백그라운드 바닥컬러가 초록이면 점프
 			if(enemy.isBottom() && !enemy.isUp() && bottomColor == -33423872) {
 				enemy.up();
 			}

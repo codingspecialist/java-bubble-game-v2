@@ -26,7 +26,6 @@ public class GameOver extends JLabel {
 	
 	private void initObject() {
 		image = new ImageIcon("image/gameOver.png");
-		//image = new ImageIcon("image/gameOver2.jpg");
 	}
 	
 	private void initSetting() {

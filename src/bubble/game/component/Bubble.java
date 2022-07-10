@@ -44,18 +44,7 @@ public class Bubble extends JLabel implements Moveable {
  		this.enemy   = mContext.getEnemyList();
  		initObject();
  		initSetting();
-// 		initThread();
  	}
-
-//	private void initThread() {
-//		new Thread(()-> {
-//			if(player.getPd() == PlayerDirection.LEFT) {
-//				left();
-//			}else {
-//				right();
-//			}
-//		}).start();
-//	}
 	
 	private void initObject() {
 		bubble = new ImageIcon("image/bubble.png");

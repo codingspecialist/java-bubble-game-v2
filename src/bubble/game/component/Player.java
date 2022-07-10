@@ -107,7 +107,6 @@ public class Player extends JLabel implements Moveable {
 	@Override
 	public void right() {
 		// TODO Auto-generated method stub
-		//System.out.println("right");
 		pd = PlayerDirection.RIGHT;
 		right=true;
 		new Thread(()-> {
@@ -129,7 +128,6 @@ public class Player extends JLabel implements Moveable {
 	@Override
 	public void up() {
 		// TODO Auto-generated method stub
-		//System.out.println("up");
 		up = true;
 		new Thread(()->{
 			for(int i=0; i<130/JUMPSPEED; i++) {
